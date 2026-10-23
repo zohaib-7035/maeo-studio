@@ -1,0 +1,16 @@
+{
+ "id": "20261023_235758_sample_traffic_clip",
+ "file": "20261023_235758_sample_traffic_clip.mp4",
+ "name": "sample_traffic_clip.mp4",
+ "camera": "Main Blvd \u2013 Camera 07",
+ "preset": "Balanced (CRF 28)",
+ "stored": "2026-10-23T23:57:59",
+ "orig_bytes": 3042918,
+ "comp_bytes": 515689,
+ "psnr": 31.163312911987305,
+ "frames": 240,
+ "fps": 30.0,
+ "w": 720,
+ "h": 586,
+ "secs": 0.6988452999999026
+}
