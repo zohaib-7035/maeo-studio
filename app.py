@@ -33,7 +33,54 @@ DATA = os.path.join(HERE, "data")
 NAVY, BLUE, ORANGE, PAPER, GREY = "#0F1B2D", "#2457C5", "#D9772B", "#F6F5F0", "#9AA5B4"
 TOK = 16
 
-st.set_page_config(page_title="MAEO Studio", page_icon="🎥", layout="wide", initial_sidebar_state="expanded")
+# ======================================================================= custom icon set (MAEO line icons)
+_IC = {
+    "logo": '<rect x="2.6" y="2.6" width="5.2" height="5.2" rx="1.4" fill="currentColor" stroke="none"/>'
+            '<rect x="9.4" y="2.6" width="5.2" height="5.2" rx="1.4"/>'
+            '<rect x="16.2" y="2.6" width="5.2" height="5.2" rx="1.4" fill="currentColor" stroke="none"/>'
+            '<rect x="2.6" y="9.4" width="5.2" height="5.2" rx="1.4"/>'
+            '<rect x="9.4" y="9.4" width="5.2" height="5.2" rx="1.4" fill="currentColor" stroke="none"/>'
+            '<rect x="16.2" y="9.4" width="5.2" height="5.2" rx="1.4"/>'
+            '<rect x="2.6" y="16.2" width="5.2" height="5.2" rx="1.4" fill="currentColor" stroke="none"/>'
+            '<rect x="9.4" y="16.2" width="5.2" height="5.2" rx="1.4"/>'
+            '<rect x="16.2" y="16.2" width="5.2" height="5.2" rx="1.4" fill="currentColor" stroke="none"/>',
+    "overview": '<rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5" rx="2"/>'
+                '<rect x="13.5" y="11" width="7.5" height="10" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/>',
+    "vault": '<path d="M12 2.8l7.5 3v5.4c0 4.6-3.1 8.5-7.5 10-4.4-1.5-7.5-5.4-7.5-10V5.8z"/>'
+             '<circle cx="12" cy="10.6" r="2.1"/><path d="M12 12.7v3.4"/>',
+    "storage": '<ellipse cx="12" cy="5.5" rx="7.5" ry="2.7"/><path d="M4.5 5.5v6.2c0 1.5 3.4 2.7 7.5 2.7s7.5-1.2 7.5-2.7V5.5"/>'
+               '<path d="M4.5 11.7v6.6c0 1.5 3.4 2.7 7.5 2.7s7.5-1.2 7.5-2.7v-6.6"/><path d="M10 16.2l2 1.6 2-1.6"/>',
+    "traffic": '<rect x="8" y="2.5" width="8" height="19" rx="3.2"/><circle cx="12" cy="7.2" r="1.6"/>'
+               '<circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="16.8" r="1.6"/>'
+               '<path d="M8 7.2H5M8 12H5M16 7.2h3M16 12h3"/>',
+    "fleet": '<circle cx="12" cy="5" r="2.3"/><circle cx="4.8" cy="18.5" r="2.3"/><circle cx="19.2" cy="18.5" r="2.3"/>'
+             '<path d="M10.9 7.1L6 16.4M13.1 7.1l4.9 9.3M7.1 18.5h9.8"/><circle cx="12" cy="14" r="1.3"/>',
+    "steps": '<rect x="2.5" y="5" width="10" height="14" rx="2"/><path d="M5.5 9h4M5.5 12h4M5.5 15h2.5"/>'
+             '<rect x="16" y="9" width="5.5" height="6" rx="1.6"/><path d="M13 12h2.6M14.3 10.6l1.4 1.4-1.4 1.4"/>',
+    "results": '<path d="M3 20.5h18"/><rect x="5" y="11" width="3.2" height="9.5" rx="1"/>'
+               '<rect x="10.4" y="5.5" width="3.2" height="15" rx="1"/><rect x="15.8" y="13.5" width="3.2" height="7" rx="1"/>',
+}
+
+
+def icon(name, size=24, color="currentColor", sw=1.8):
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" '
+            f'stroke="{color}" stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round" '
+            f'style="color:{color};display:block">{_IC[name]}</svg>')
+
+
+def icon_uri(name):
+    import urllib.parse
+    return "data:image/svg+xml;utf8," + urllib.parse.quote(icon(name, 24, "#000", 1.9))
+
+
+NAV = [("Overview", "overview"), ("Secure Video Vault", "vault"), ("Compressed Storage", "storage"),
+       ("Traffic Analyzer", "traffic"), ("Fleet Planner", "fleet"), ("How MAEO compresses", "steps"),
+       ("Research results", "results")]
+NAV_CSS = "".join(
+    f'[data-testid="stSidebar"] [data-testid="stRadioOption"]:has(input[value="{i}"]) [data-testid="stMarkdownContainer"]::before'
+    f'{{-webkit-mask-image:url("{icon_uri(k)}");mask-image:url("{icon_uri(k)}")}}\n' for i, (_, k) in enumerate(NAV))
+
+st.set_page_config(page_title="MAEO Studio", page_icon=os.path.join(DATA, "logo.png"), layout="wide", initial_sidebar_state="expanded")
 
 st.markdown(
     f"""
@@ -56,6 +103,25 @@ st.markdown(
     .step-chip {{display:inline-block;padding:6px 12px;margin:2px 4px 2px 0;border-radius:999px;font-size:14px;background:#E6ECF5;color:#1E3F8A}}
     .step-chip.on {{background:{BLUE};color:{PAPER};font-weight:600}}
     .step-chip.done {{background:#D6E2F7;color:#1E3F8A}}
+    .hero-row {{display:flex;gap:18px;align-items:center}}
+    .hero-ic {{flex:0 0 auto;width:64px;height:64px;border-radius:16px;background:rgba(143,179,240,.14);
+              border:1px solid rgba(143,179,240,.35);display:flex;align-items:center;justify-content:center;color:#8FB3F0}}
+    .card-top {{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}}
+    .ic-tile {{width:44px;height:44px;border-radius:12px;background:#E6ECF5;color:{BLUE};display:flex;align-items:center;justify-content:center}}
+    .brand {{display:flex;gap:12px;align-items:center}}
+    .brand-ic {{width:44px;height:44px;border-radius:12px;background:{BLUE};color:{PAPER};display:flex;align-items:center;justify-content:center}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"] {{padding:9px 12px;border-radius:10px;margin:0 0 4px 0;width:100%;cursor:pointer;transition:background .15s}}
+    [data-testid="stSidebar"] [data-testid="stRadioGroup"], [data-testid="stSidebar"] [data-testid="stRadioGroup"] > div {{width:100%}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"]:hover {{background:rgba(143,179,240,.12)}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"] > div > div:first-child {{display:none !important}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] {{display:flex;align-items:center;gap:12px}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {{margin:0;font-size:15px}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"]::before {{content:"";flex:0 0 20px;width:20px;height:20px;background-color:#8FB3F0;
+              -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"]:has(input:checked) {{background:{BLUE}}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"]:has(input:checked) [data-testid="stMarkdownContainer"]::before {{background-color:#FFFFFF}}
+    [data-testid="stSidebar"] [data-testid="stRadioOption"]:has(input:checked) p {{color:#FFFFFF !important;font-weight:600}}
+    {NAV_CSS}
     </style>
     """,
     unsafe_allow_html=True,
@@ -86,14 +152,15 @@ def rerun():
     (st.rerun if hasattr(st, "rerun") else st.experimental_rerun)()
 
 
-def hero(eyebrow, title, sub, badge=None):
+def hero(eyebrow, title, sub, badge=None, ic=None):
     b = ""
     if badge == "live":
-        b = "<span class='badge live'>● LIVE ON THIS LAPTOP</span>"
+        b = "<span class='badge live'>● LIVE · REAL PROCESSING</span>"
     elif badge == "replay":
         b = "<span class='badge replay'>RECORDED RESULTS</span>"
-    st.markdown(f"<div class='hero'><div class='eyebrow'>{eyebrow}</div><h1>{title}</h1><p>{sub}</p>"
-                f"<div style='margin-top:10px'>{b}</div></div>", unsafe_allow_html=True)
+    tile = f"<div class='hero-ic'>{icon(ic, 34)}</div>" if ic else ""
+    st.markdown(f"<div class='hero'><div class='hero-row'>{tile}<div><div class='eyebrow'>{eyebrow}</div><h1>{title}</h1>"
+                f"<p>{sub}</p></div></div><div style='margin-top:10px'>{b}</div></div>", unsafe_allow_html=True)
 
 
 @st.cache_data
@@ -160,11 +227,12 @@ def fmt_bytes(n):
 
 # ======================================================================= sidebar
 with st.sidebar:
-    st.markdown(f"<div style='font-size:30px;font-weight:800;color:{PAPER}'>🎥 MAEO Studio</div>"
-                "<div style='color:#8FB3F0;font-size:13px'>Meaning-aware video compression</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='brand'><div class='brand-ic'>{icon('logo', 28)}</div><div>"
+                f"<div style='font-size:24px;font-weight:800;color:{PAPER};line-height:1.1'>MAEO Studio</div>"
+                "<div style='color:#8FB3F0;font-size:12.5px'>Meaning-aware video compression</div></div></div>",
+                unsafe_allow_html=True)
     st.markdown("---")
-    PAGES = ["🏠 Overview", "🔐 Secure Video Vault", "🗜️ Compressed Storage", "🚦 Traffic Analyzer", "🏙️ Fleet Planner",
-             "▶️ How MAEO compresses", "📊 Research results"]
+    PAGES = [n for n, _ in NAV]
     page = st.radio("Navigate", PAGES, label_visibility="collapsed")
     st.markdown("---")
     st.markdown("<div style='font-size:13px;line-height:1.5'>"
@@ -207,7 +275,7 @@ def pipeline_figure():
 
 def page_overview():
     hero("AI VIDEO COMPRESSION · AIEF 2026", "MAEO Studio",
-         "Spend bits on what the receiver needs, not just on pixels. Built for cameras that are watched by AI.")
+         "Spend bits on what the receiver needs, not just on pixels. Built for cameras that are watched by AI.", ic="logo")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Mask cost", "0 bits", "decoder rebuilds it")
     c2.metric("Semantic bits saved", "−72%", "Wyner–Ziv prior")
@@ -215,16 +283,16 @@ def page_overview():
     c4.metric("AI still agrees", f"{row('P4-V3', 0.045).seg_acc*100:.1f}%", "segmentation, balanced")
     st.markdown("### Products")
     a, s_, b, c = st.columns(4)
-    s_.markdown("<div class='card'><span class='badge live'>LIVE</span><h4>🗜️ Compressed Storage</h4>"
+    s_.markdown("<div class='card'><div class='card-top'><div class='ic-tile'>" + icon("storage", 24) + "</div><span class='badge live'>LIVE</span></div><h4>Compressed Storage</h4>"
                 "Upload footage, compress it, check the quality and keep it in a searchable library. "
                 "Play back or download any stored video.</div>", unsafe_allow_html=True)
-    a.markdown("<div class='card'><span class='badge live'>LIVE</span><h4>🔐 Secure Video Vault</h4>"
+    a.markdown("<div class='card'><div class='card-top'><div class='ic-tile'>" + icon("vault", 24) + "</div><span class='badge live'>LIVE</span></div><h4>Secure Video Vault</h4>"
                "Encrypt a video into a sealed <b>.maeosec</b> file with AES-256-GCM. Upload it with the password to get the "
                "original video back. Any change to the file is detected and refused.</div>", unsafe_allow_html=True)
-    b.markdown("<div class='card'><span class='badge live'>LIVE</span><h4>🚦 Traffic Analyzer</h4>"
+    b.markdown("<div class='card'><div class='card-top'><div class='ic-tile'>" + icon("traffic", 24) + "</div><span class='badge live'>LIVE</span></div><h4>Traffic Analyzer</h4>"
                "Upload a traffic camera video. MAEO’s 16×16 token grid finds where vehicles move, frame by frame, "
                "and exports an annotated preview and a CSV report.</div>", unsafe_allow_html=True)
-    c.markdown("<div class='card'><span class='badge live'>LIVE</span><h4>🏙️ Fleet Planner</h4>"
+    c.markdown("<div class='card'><div class='card-top'><div class='ic-tile'>" + icon("fleet", 24) + "</div><span class='badge live'>LIVE</span></div><h4>Fleet Planner</h4>"
                "Plan a city camera network: uplink bandwidth, storage and monthly cost from MAEO’s measured "
                "bits per pixel. Download the plan as CSV.</div>", unsafe_allow_html=True)
     st.markdown("### How it works")
@@ -297,8 +365,8 @@ def vault_decrypt(blob: bytes, password: str):
 
 
 def page_vault():
-    hero("SECURE VIDEO · AES-256-GCM", "🔐 Secure Video Vault",
-         "Seal a video into one encrypted file. Only the right password opens it, and any tampering is refused.", "live")
+    hero("SECURE VIDEO · AES-256-GCM", "Secure Video Vault",
+         "Seal a video into one encrypted file. Only the right password opens it, and any tampering is refused.", "live", ic="vault")
     t1, t2 = st.tabs(["① Encrypt a video", "② Decrypt a .maeosec file"])
     with t1:
         c1, c2 = st.columns([1.1, 1])
@@ -306,7 +374,7 @@ def page_vault():
             up = st.file_uploader("Video to protect", type=["mp4", "mov", "avi", "mkv", "webm", "m4v"], key="v_up")
             use_sample = st.checkbox("Use the sample traffic clip instead", value=up is None, key="v_sample")
             pw = st.text_input("Password", type="password", key="v_pw", help="At least 6 characters. Share it separately.")
-            go = st.button("🔒 Encrypt and seal", type="primary", key="v_go")
+            go = st.button("Encrypt and seal", type="primary", key="v_go", icon=":material/lock:")
         if up is not None and not use_sample:
             data, name = up.getvalue(), up.name
         else:
@@ -330,7 +398,7 @@ def page_vault():
             m2.metric("Encrypted file", fmt_bytes(len(blob)))
             m3.metric("Cipher", "AES-256-GCM", "scrypt key")
             st.code(f"SHA-256 of original : {hdr['sha256']}\nEncrypted (last 32 bytes): {blob[-32:].hex()}", language="text")
-            st.download_button("⬇️ Download encrypted file", blob, file_name=os.path.splitext(oname)[0] + ".maeosec",
+            st.download_button("Download encrypted file", icon=":material/download:", data= blob, file_name=os.path.splitext(oname)[0] + ".maeosec",
                                mime="application/octet-stream", key="v_dl")
             st.caption("Open this file in tab ② with the same password. The video inside cannot be played without it.")
     with t2:
@@ -340,9 +408,9 @@ def page_vault():
             if enc is None and "vault_out" in st.session_state:
                 st.info("Tip: no file chosen, so the file you just sealed in tab ① will be used.")
             dpw = st.text_input("Password", type="password", key="d_pw")
-            tamper = st.checkbox("🧪 Attack demo: secretly change one byte of the file before opening", key="d_tamper",
+            tamper = st.checkbox("Attack demo: secretly change one byte of the file before opening", key="d_tamper",
                                  help="Leave this OFF for a normal decrypt. Turn it ON to show that a changed file is refused.")
-            dgo = st.button("🔓 Verify and decrypt", type="primary", key="d_go")
+            dgo = st.button("Verify and decrypt", type="primary", key="d_go", icon=":material/lock_open:")
         if dgo:
             if enc is not None:
                 blob = enc.getvalue()
@@ -374,22 +442,22 @@ def page_vault():
             if err:
                 kind, msg = err if isinstance(err, tuple) else ("other", str(err))
                 if kind == "tamper":
-                    st.warning("🛡️ **Attack blocked.** " + msg + " The vault refused to open it, so nothing was shown. "
-                               "This is the protection working.")
+                    st.warning("**Attack blocked.** " + msg + " The vault refused to open it, so nothing was shown. "
+                               "This is the protection working.", icon=":material/gpp_good:")
                     st.caption("To decrypt normally, untick the attack demo box and press Verify and decrypt again.")
                 elif kind == "password":
-                    st.error("🔑 " + msg)
+                    st.error(msg, icon=":material/key_off:")
                     st.caption("Use the same password you typed when sealing the file.")
                 else:
-                    st.error("⛔ " + msg)
+                    st.error(msg, icon=":material/block:")
             elif dec:
                 hdr, data, ms = dec
-                st.success(f"✅ Verified and decrypted in {ms:.0f} ms. SHA-256 matches the original.")
+                st.success(f"Verified and decrypted in {ms:.0f} ms. SHA-256 matches the original.", icon=":material/verified:")
                 st.video(data)
                 a, b = st.columns(2)
                 a.metric("File", hdr["filename"])
                 b.metric("Sealed on", hdr["created"].replace("T", " "))
-                st.download_button("⬇️ Download decrypted video", data, file_name=hdr["filename"], key="d_dl")
+                st.download_button("Download decrypted video", icon=":material/download:", data= data, file_name=hdr["filename"], key="d_dl")
     st.caption("MAEO is a codec, not a cipher: in the full pipeline the compressed MAEO file is sealed this way. "
                "Inside MAEO, each file also carries a SHA-256 fingerprint of the decoder model, so a wrong model is refused.")
 
@@ -657,9 +725,9 @@ def crop_box(mask, w, h, size=192):
 
 
 def page_traffic():
-    hero("SMART-CITY TRAFFIC · BITS WHERE THE AI NEEDS THEM", "🚦 Traffic Analyzer",
+    hero("SMART-CITY TRAFFIC · BITS WHERE THE AI NEEDS THEM", "Traffic Analyzer",
          "Give it a traffic camera video. ① Analyse the movement on MAEO’s 16×16 token grid. "
-         "② Compress it so the vehicles keep their quality and the empty road costs almost nothing.", "live")
+         "② Compress it so the vehicles keep their quality and the empty road costs almost nothing.", "live", ic="traffic")
     try:
         import cv2  # noqa: F401
     except Exception:
@@ -720,7 +788,7 @@ def page_traffic():
             show_image(res["gif"], caption="Orange = moving tokens (vehicles, people). Animated preview.")
         with a2:
             m1, m2 = st.columns(2)
-            m1.metric("Frames analysed", f"{len(df)}", f"{res['secs']:.1f} s on this laptop")
+            m1.metric("Frames analysed", f"{len(df)}", f"{res['secs']:.1f} s to analyse")
             m2.metric("Tokens per frame", f"{int(df.total_tokens.iloc[0]):,}")
             m1.metric("Moving tokens", f"{df.moving_pct.mean():.1f}%", f"peak {df.moving_pct.max():.1f}%")
             m2.metric("Static tokens", f"{100 - df.moving_pct.mean():.1f}%", "can be predicted")
@@ -729,7 +797,7 @@ def page_traffic():
                 ax.imshow(res["heat"] / max(1, len(df)), cmap="Oranges")
                 ax.set_title("Where traffic moves (lanes)"); ax.axis("off")
                 fig.tight_layout(); st.pyplot(fig)
-        st.download_button("⬇️ Download movement report (CSV)", df.to_csv(index=False).encode(),
+        st.download_button("Download movement report (CSV)", icon=":material/download:", data= df.to_csv(index=False).encode(),
                            file_name="maeo_movement_report.csv", key="t_csv")
 
     # ---------------- ② compress
@@ -826,14 +894,14 @@ def page_traffic():
         show_image(bgr2pil(cr["f_smt"]).crop(box).resize((288, 288), Image.NEAREST), caption=f"MAEO-style · {fmt_bytes(s_smt)}")
 
     d1, d2, d3 = st.columns(3)
-    d1.download_button("⬇️ Download MAEO-style video", cr["smt"], file_name="traffic_maeo_style.mp4", key="t_dl_smt")
-    d2.download_button("⬇️ Download standard video", cr["std"], file_name="traffic_standard.mp4", key="t_dl_std")
-    d3.download_button("⬇️ Download per-frame report (CSV)", df.to_csv(index=False).encode(),
+    d1.download_button("Download MAEO-style video", icon=":material/download:", data= cr["smt"], file_name="traffic_maeo_style.mp4", key="t_dl_smt")
+    d2.download_button("Download standard video", icon=":material/download:", data= cr["std"], file_name="traffic_standard.mp4", key="t_dl_std")
+    d3.download_button("Download per-frame report (CSV)", icon=":material/download:", data= df.to_csv(index=False).encode(),
                        file_name="maeo_traffic_bits_report.csv", key="t_dl_csv")
     st.info("**The MAEO goal in one line:** same bits, better where it matters. A normal codec treats the sky and a car the same; "
             "MAEO spends the bits on what the traffic AI needs.")
     st.caption("How it runs here: importance comes from live motion analysis on MAEO’s 16×16 token grid, and the video is "
-               "encoded with standard H.264 on this laptop. In MAEO’s next phase (P5), AI agents for meaning, motion and the "
+               "encoded with standard H.264. In MAEO’s next phase (P5), AI agents for meaning, motion and the "
                "query decide the importance, and the neural codec spends the bits.")
 
 
@@ -899,8 +967,8 @@ def library():
 
 
 def page_storage():
-    hero("VIDEO STORAGE · COMPRESS, STORE, PLAY BACK", "🗜️ Compressed Video Storage",
-         "Upload camera footage. It is compressed, quality-checked and kept in a searchable library on this laptop.", "live")
+    hero("VIDEO STORAGE · COMPRESS, STORE, PLAY BACK", "Compressed Video Storage",
+         "Upload camera footage. It is compressed, quality-checked and kept in a searchable library.", "live", ic="storage")
     if not ffmpeg_exe():
         st.error("The video engine is missing. Close the app and run run.bat again to install it.")
         return
@@ -913,7 +981,7 @@ def page_storage():
             preset = st.radio("Compression level", list(PRESETS), index=1, key="s_preset", horizontal=True)
             scale = st.selectbox("Resolution", list(SCALES), index=0, key="s_scale")
             camera = st.text_input("Camera / tag", "Main Blvd – Camera 07", key="s_cam")
-            go = st.button("🗜️ Compress and store", type="primary", key="s_go")
+            go = st.button("Compress and store", type="primary", key="s_go", icon=":material/compress:")
         with c2:
             if up is None:
                 st.video(os.path.join(DATA, "sample_clip.mp4"))
@@ -963,7 +1031,7 @@ def page_storage():
             path = os.path.join(STORE, meta["file"])
             if os.path.exists(path):
                 with open(path, "rb") as fh:
-                    st.download_button("⬇️ Download compressed video", fh.read(), file_name=meta["name"].rsplit(".", 1)[0] + "_compressed.mp4",
+                    st.download_button("Download compressed video", icon=":material/download:", data= fh.read(), file_name=meta["name"].rsplit(".", 1)[0] + "_compressed.mp4",
                                        key="s_dl_last")
     with t2:
         items = library()
@@ -989,8 +1057,8 @@ def page_storage():
                     with open(path, "rb") as fh:
                         vid = fh.read()
                     st.video(vid)
-                    st.download_button("⬇️ Download this video", vid, file_name=d["name"].rsplit(".", 1)[0] + "_compressed.mp4", key="s_dl_pick")
-    st.caption("Storage engine today: standard H.264 compression (runs on any laptop). MAEO’s neural codec needs a GPU and plugs in "
+                    st.download_button("Download this video", icon=":material/download:", data= vid, file_name=d["name"].rsplit(".", 1)[0] + "_compressed.mp4", key="s_dl_pick")
+    st.caption("Storage engine today: standard H.264 compression (runs on any CPU). MAEO’s neural codec needs a GPU and plugs in "
                "as the storage engine on GPU servers; its measured results are on the Research results page.")
 
 
@@ -999,8 +1067,8 @@ RES = {"720p (1280×720)": (1280, 720), "1080p (1920×1080)": (1920, 1080), "4K 
 
 
 def page_fleet():
-    hero("CITY CAMERA NETWORKS · PLANNING", "🏙️ Fleet Planner",
-         "Plan bandwidth, storage and cost for a camera fleet, using MAEO’s measured bits per pixel.", "live")
+    hero("CITY CAMERA NETWORKS · PLANNING", "Fleet Planner",
+         "Plan bandwidth, storage and cost for a camera fleet, using MAEO’s measured bits per pixel.", "live", ic="fleet")
     c1, c2 = st.columns([1, 1.3])
     with c1:
         name = st.text_input("Project name", "Lahore Smart Traffic – Phase 1")
@@ -1043,7 +1111,7 @@ def page_fleet():
     tab = MEAN[MEAN.exp == "P4-V3"].copy()
     tab["Quality level"] = tab.lam.map(LAM_LABEL)
     tab["Mbps @1080p"] = tab.bpp.apply(lambda b_: mbps(b_, 1920, 1080, dfps))
-    tab["Fits link"] = np.where(tab["Mbps @1080p"] <= link, "✅ yes", "❌ no")
+    tab["Fits link"] = np.where(tab["Mbps @1080p"] <= link, "Yes", "No")
     fit = tab[tab["Mbps @1080p"] <= link].sort_values("bpp")
     with l2:
         if len(fit):
@@ -1059,7 +1127,7 @@ def page_fleet():
                           "per_camera_mbps": round(per_cam, 3), "total_gbps": round(per_cam * cams / 1000, 3),
                           "storage_tb": round(maeo_tb, 2), "raw_storage_tb": round(raw_tb, 1),
                           "storage_cost_usd_month": round(maeo_tb * price, 0)}])
-    st.download_button("⬇️ Download plan (CSV)", plan.to_csv(index=False).encode(), file_name="maeo_fleet_plan.csv", key="f_dl")
+    st.download_button("Download plan (CSV)", icon=":material/download:", data= plan.to_csv(index=False).encode(), file_name="maeo_fleet_plan.csv", key="f_dl")
     st.caption("For reference: x265 low-delay reaches a similar PSNR at a lower bitrate today. MAEO’s goal is to keep the bits "
                "an AI needs; matching x265 on pixels is ongoing work.")
 
@@ -1084,7 +1152,7 @@ def size_bars(before_bytes, after_bytes):
 
 
 def page_steps():
-    hero("WALKTHROUGH", "▶️ How MAEO compresses", "One traffic frame, step by step: before → after.", "replay")
+    hero("WALKTHROUGH", "How MAEO compresses", "One traffic frame, step by step: before → after.", "replay", ic="steps")
     if "step" not in st.session_state:
         st.session_state.step = 0
     top1, top2, top3 = st.columns([1.2, 1.2, 1])
@@ -1183,8 +1251,8 @@ def page_steps():
 
 # ======================================================================= page: research results
 def page_results():
-    hero("RESEARCH · UVG 1080p, 7 SEQUENCES × 96 FRAMES", "📊 Research results",
-         "Real recorded results from our Kaggle T4 GPU runs. Every frame was decoded from a real file.", "replay")
+    hero("RESEARCH · UVG 1080p, 7 SEQUENCES × 96 FRAMES", "Research results",
+         "Real recorded results from our Kaggle T4 GPU runs. Every frame was decoded from a real file.", "replay", ic="results")
     c1, c2 = st.columns([1, 1])
     with c1:
         exp = st.radio("Codec", ["P4-V3", "P4-I3"], format_func=lambda e: CODEC_NAME[e], key="r_exp")
@@ -1224,6 +1292,6 @@ def page_results():
 
 
 # ======================================================================= router
-{"🏠 Overview": page_overview, "🔐 Secure Video Vault": page_vault, "🗜️ Compressed Storage": page_storage,
- "🚦 Traffic Analyzer": page_traffic,
- "🏙️ Fleet Planner": page_fleet, "▶️ How MAEO compresses": page_steps, "📊 Research results": page_results}[page]()
+{"Overview": page_overview, "Secure Video Vault": page_vault, "Compressed Storage": page_storage,
+ "Traffic Analyzer": page_traffic,
+ "Fleet Planner": page_fleet, "How MAEO compresses": page_steps, "Research results": page_results}[page]()

@@ -1,8 +1,8 @@
 @echo off
 cd /d "%~dp0"
-python -c "import streamlit, cryptography, matplotlib, pandas, PIL, cv2, imageio_ffmpeg" 2>nul
+python -c "import streamlit, cryptography, matplotlib, pandas, PIL, cv2, imageio_ffmpeg; v=tuple(int(x) for x in streamlit.__version__.split('.')[:2]); assert v>=(1,40)" 2>nul
 if errorlevel 1 (
-  echo First run: installing the MAEO Studio packages. This needs internet and takes a few minutes...
+  echo Installing or updating the MAEO Studio packages. This needs internet and takes a few minutes...
   python -m pip install -r requirements.txt
 )
 echo.
