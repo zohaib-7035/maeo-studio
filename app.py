@@ -558,6 +558,28 @@ def decode_all(path):
     return out
 
 
+def stream_quality(path, ref, masks, keep_idx):
+    """PSNR on important tokens and on the background, decoding the file one frame at a time (low memory)."""
+    import cv2
+    cap = cv2.VideoCapture(path)
+    num_in = den_in = num_out = den_out = 0.0
+    kept, t = None, 0
+    while t < len(ref):
+        ok, b = cap.read()
+        if not ok:
+            break
+        a, m = ref[t], masks[t]
+        px = np.kron(m, np.ones((TOK, TOK), dtype=bool))[: a.shape[0], : a.shape[1]]
+        e = ((a.astype(np.float32) - b.astype(np.float32)) ** 2).mean(axis=2)
+        num_in += e[px].sum(); den_in += px.sum(); num_out += e[~px].sum(); den_out += (~px).sum()
+        if t == keep_idx:
+            kept = b.copy()
+        t += 1
+    cap.release()
+    f = lambda n_, d_: (10 * np.log10(255.0 ** 2 / max(n_ / d_, 1e-6)) if d_ else float("nan"))
+    return (f(num_in, den_in), f(num_out, den_out)), (kept if kept is not None else ref[keep_idx]), t
+
+
 def region_psnr(ref, test, masks):
     num_in = den_in = num_out = den_out = 0.0
     for a, b, m in zip(ref, test, masks):
@@ -590,22 +612,23 @@ def smart_compress(path, max_frames, width, thr, crf, bg_strength):
     t_std = time.perf_counter() - t0
     t0 = time.perf_counter()
     encode_frames(smart, fps, max(18, crf - 2), smt_p)            # a little extra quality on the vehicles
+    del smart
     t_smt = time.perf_counter() - t0
-    dec_std, dec_smt = decode_all(std_p), decode_all(smt_p)
-    n = min(len(frames), len(dec_std), len(dec_smt))
-    q_std = region_psnr(frames[:n], dec_std[:n], imp[:n])
-    q_smt = region_psnr(frames[:n], dec_smt[:n], imp[:n])
+    n = len(frames)
+    busiest = int(np.argmax([m.mean() for m in masks]))
+    q_std, f_std, n_std = stream_quality(std_p, frames, imp, busiest)
+    q_smt, f_smt, n_smt = stream_quality(smt_p, frames, imp, busiest)
+    n = min(n, n_std, n_smt)
     sz_std, sz_smt = mp4_frame_sizes(std_p), mp4_frame_sizes(smt_p)
     heat = np.mean([m.astype(np.float32) for m in imp], axis=0)
     df = pd.DataFrame({"frame": np.arange(n), "time_s": np.round(np.arange(n) / fps, 3),
                        "moving_tokens_pct": [round(100 * float(m.mean()), 2) for m in masks[:n]],
                        "important_tokens_pct": [round(100 * float(m.mean()), 2) for m in imp[:n]],
                        "standard_bytes": (sz_std + [np.nan] * n)[:n], "maeo_smart_bytes": (sz_smt + [np.nan] * n)[:n]})
-    busiest = int(df.moving_tokens_pct.idxmax())
     h, w = frames[0].shape[:2]
     return dict(fps=fps, w=w, h=h, n=n, raw_bytes=w * h * 3 * n, std=open(std_p, "rb").read(), smt=open(smt_p, "rb").read(),
                 q_std=q_std, q_smt=q_smt, df=df, heat=heat, imp_area=float(np.mean([m.mean() for m in imp])),
-                busiest=busiest, f_orig=frames[busiest], f_std=dec_std[busiest], f_smt=dec_smt[busiest],
+                busiest=busiest, f_orig=frames[busiest], f_std=f_std, f_smt=f_smt,
                 m_busy=imp[busiest], t_std=t_std, t_smt=t_smt)
 
 
@@ -653,8 +676,8 @@ def page_traffic():
         up = st.file_uploader("Traffic camera video", type=["mp4", "mov", "avi", "mkv", "m4v"], key="t_up")
         st.caption("No file? The sample intersection clip is used.")
         with st.expander("Settings", expanded=False):
-            max_frames = st.slider("Frames to process", 48, 300, 240, 24, key="t_nf")
-            width = st.select_slider("Processing width (px)", options=[480, 640, 720, 960], value=720, key="t_w")
+            max_frames = st.slider("Frames to process", 48, 300, 144, 24, key="t_nf")
+            width = st.select_slider("Processing width (px)", options=[480, 640, 720, 960], value=640, key="t_w")
             thr = st.slider("Motion sensitivity (lower = more sensitive)", 2.0, 20.0, 9.0, 0.5, key="t_thr")
             crf = st.select_slider("Compression level (CRF)", options=[23, 26, 28, 30, 32], value=28, key="t_crf")
             bg = st.slider("Background saving strength", 1.0, 8.0, 4.0, 0.5, key="t_bg",
